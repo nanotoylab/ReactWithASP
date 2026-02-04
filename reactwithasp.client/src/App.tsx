@@ -1,57 +1,70 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import './App.css';
 
-interface Forecast {
-    date: string;
-    temperatureC: number;
-    temperatureF: number;
-    summary: string;
+// データの形を定義（C#側のStockItemと合わせる）
+interface StockItem {
+    id: number;
+    name: string;
+    code: number;
+    quantity: number;
+    price: number;
+    totalAmount: number;
 }
 
-function App() {
-    const [forecasts, setForecasts] = useState<Forecast[]>();
+const test = (name: string): string => {
+    return "testFunc" + name;
+}
 
+
+function App() {
+    // 株データを保存する「箱」を用意
+    const [stocks, setStocks] = useState<StockItem[]>();
+
+    // 画面が表示されたら1回だけ実行される処理
     useEffect(() => {
-        populateWeatherData();
+        populateStockData();
     }, []);
 
-    const contents = forecasts === undefined
-        ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-        : <table className="table table-striped" aria-labelledby="tableLabel">
+    // 表（テーブル）の中身を作る部分
+    const contents = stocks === undefined
+        ? <p><em>Loading... データを取得中...</em></p>
+        :<table className="table table-striped" aria-labelledby="tabelLabel">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Temp. (C)</th>
-                    <th>Temp. (F)</th>
-                    <th>Summary</th>
+                    <th>銘柄名</th>
+                    <th>コード</th>
+                    <th>保有数</th>
+                    <th>平均取得単価</th>
+                    <th>取得額合計</th>
                 </tr>
             </thead>
             <tbody>
-                {forecasts.map(forecast =>
-                    <tr key={forecast.date}>
-                        <td>{forecast.date}</td>
-                        <td>{forecast.temperatureC}</td>
-                        <td>{forecast.temperatureF}</td>
-                        <td>{forecast.summary}</td>
+                {stocks.map(stock => (
+                    <tr key={stock.id}>
+                        <td>{stock.name}</td>
+                        <td>{stock.code}</td>
+                        <td>{stock.quantity} 株</td>
+                        <td>{stock.price.toLocaleString()} 円</td>
+                        <td>{stock.totalAmount.toLocaleString()} 円</td>
                     </tr>
-                )}
+                ))}
             </tbody>
         </table>;
 
     return (
         <div>
-            <h1 id="tableLabel">Weather forecast</h1>
-            <p>This component demonstrates fetching data from the server.</p>
+            <h1 id="tabelLabel">資産管理</h1>
+            <p>サーバー(C#)から取得した保有株リストです。</p>
             {contents}
         </div>
     );
 
-    async function populateWeatherData() {
-        const response = await fetch('weatherforecast');
-        if (response.ok) {
-            const data = await response.json();
-            setForecasts(data);
-        }
+    // サーバーからデータを取ってくる関数
+    async function populateStockData() {
+        // C#で作った 'stock' という住所にアクセス
+        const response = await fetch('stock');
+        const data = await response.json();
+        setStocks(data);
     }
 }
 

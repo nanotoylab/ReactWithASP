@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import './App.css';
+import React from 'react';
 
 // データの形を定義（C#側のStockItemと合わせる）
 interface StockItem {

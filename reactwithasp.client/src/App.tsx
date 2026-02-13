@@ -1,20 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import './App.css';
-import React from 'react';
-
-// データの形を定義（C#側のStockItemと合わせる）
-interface StockItem {
-    id: number;
-    name: string;
-    code: number;
-    quantity: number;
-    price: number;
-    totalAmount: number;
-}
-
-const test = (name: string): string => {
-    return "testFunc" + name;
-}
+import { type StockItem } from '../src/interface/StockItem';
 
 
 function App() {
@@ -29,6 +15,7 @@ function App() {
     // 表（テーブル）の中身を作る部分
     const contents = stocks === undefined
         ? <p><em>Loading... データを取得中...</em></p>
+         
         :<table className="table table-striped" aria-labelledby="tabelLabel">
             <thead>
                 <tr>

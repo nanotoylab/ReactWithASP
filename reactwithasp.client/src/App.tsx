@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from 'react';
 import './App.css';
 import { type StockItem } from '../src/interface/StockItem';
+import * as React from 'react';
 
 
 function App() {
@@ -50,7 +51,7 @@ function App() {
     // サーバーからデータを取ってくる関数
     async function populateStockData() {
         // C#で作った 'stock' という住所にアクセス
-        const response = await fetch('stock');
+        const response = await fetch('stocks');
         const data = await response.json();
         setStocks(data);
     }

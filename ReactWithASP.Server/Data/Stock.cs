@@ -1,10 +1,10 @@
-﻿namespace ReactWithASP.Server
+﻿namespace ReactWithASP.Server.Data
 {
     public class Stock
     {
         public int Id { get; set; } // DBには必ずIDが必要です！
 
-        public string Symbol { get; set; } = string.Empty; // コード (例: 7203)
+        public string Code { get; set; } = string.Empty; // コード (例: 7203)
 
         public string Name { get; set; } = string.Empty;   // 銘柄名
 

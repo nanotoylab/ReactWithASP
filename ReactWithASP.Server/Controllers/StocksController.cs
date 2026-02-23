@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ReactWithASP.Server;
 using ReactWithASP.Server.Data;
 
 namespace MyPortfolio.Server.Controllers

@@ -40,5 +40,48 @@ namespace MyPortfolio.Server.Controllers
             // 3. 保存された最新のデータを返す
             return CreatedAtAction(nameof(Get), new { id = stock.Id }, stock);
         }
+
+        // ▼ DELETE: データを削除する
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            // 1. 指定されたIDの株をデータベースから探す
+            var stock = await _context.Stocks.FindAsync(id);
+            if (stock == null)
+            {
+                return NotFound(); // 見つからなければ 404 Not Found を返す
+            }
+
+            // 2. データベースに「削除予約」をする
+            _context.Stocks.Remove(stock);
+
+            // 3. 「保存ボタン」を押す（ここで実際にDELETEのSQLが発行される）
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // 成功したけど返すデータは特にないよ、という意味の 204 NoContent を返す
+        }
+
+        // ▼ PUT: データを更新する
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, Stock updatedStock)
+        {
+            // 1. まずデータベースから、更新したい古いデータを探し出す
+            var stock = await _context.Stocks.FindAsync(id);
+            if (stock == null)
+            {
+                return NotFound();
+            }
+
+            // 2. 古いデータを、Reactから送られてきた新しいデータで上書きする
+            stock.Code = updatedStock.Code;
+            stock.Name = updatedStock.Name;
+            stock.Price = updatedStock.Price;
+            stock.Quantity = updatedStock.Quantity;
+
+            // 3. データベースに変更を保存する
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // 成功（返すデータは特にない）
+        }
     }
 }

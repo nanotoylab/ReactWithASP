@@ -12,13 +12,23 @@ function App() {
     const [name, setName] = useState('');
     const [price, setPrice] = useState<number | ''>('');
     const [quantity, setQuantity] = useState<number | ''>('');
+    const [editingId, setEditingId] = useState < number | null > (null);
 
     const resetForm = () => {
         setCode('');
         setName('');
         setPrice('');
         setQuantity('');
+        setEditingId(null);
     }
+
+    const handleEditClick = (stock: StockItem) => {
+        setCode(stock.code);
+        setName(stock.name);
+        setPrice(stock.price);
+        setQuantity(stock.quantity);
+        setEditingId(stock.id);
+    };
 
     // 画面が表示されたら1回だけ実行される処理
     useEffect(() => {
@@ -47,6 +57,8 @@ function App() {
                         <td>{stock.quantity} 株</td>
                         <td>{stock.price.toLocaleString()} 円</td>
                         <td>{stock.totalAmount.toLocaleString()} 円</td>
+                        <td><button onClick={() => handleEditClick(stock)}>更新</button></td>
+                        <td><button onClick={() => handleDeleteStock(stock)}>削除</button></td>
                     </tr>
                 ))}
             </tbody>
@@ -56,12 +68,18 @@ function App() {
         <div>
             <h1 id="tabelLabel">資産管理</h1>
             <p>サーバーから取得した保有株リスト</p>
-            <form onSubmit={handleAddStock} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
+            <form onSubmit={handleSubmit} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
                 <input type="text" placeholder="コード (例: 8267)" value={code} onChange={e => setCode(e.target.value)} required />
                 <input type="text" placeholder="銘柄名 (例: イオン)" value={name} onChange={e => setName(e.target.value)} required />
                 <input type="number" placeholder="取得単価" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} required />
                 <input type="number" placeholder="保有数" value={quantity} onChange={e => setQuantity(e.target.value === '' ? '' : Number(e.target.value))} required />
-                <button type="submit">追加する</button>
+                <button type="submit" style={{ marginLeft: '10px' }}>
+                    {editingId ? '更新する' : '追加する'}
+                </button>
+                {/* editingId がある（true）時だけ、キャンセルボタンを出す */}
+                {editingId !== null && (
+                    <button type="button" onClick={resetForm} style={{ marginLeft: '10px' }}>キャンセル</button>
+                )}
             </form>
             {contents}
         </div>
@@ -76,29 +94,68 @@ function App() {
     }
 
 
-    async function handleAddStock(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); // ボタンを押したときの画面のチカッ（リロード）を防ぐ
 
-        const newStock = {
+        const stockData = {
             code: code,
             name: name,
             price: Number(price),
             quantity: Number(quantity)
         };
 
-        const response = await fetch('stocks', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(newStock)
-        })
+        if (editingId) {
+            // ==========================================
+            // ▼ 更新（PUT）モード
+            // ==========================================
+            const response = await fetch(`stocks/${editingId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                // idを含めた完全なデータにして送る
+                body: JSON.stringify({ id: editingId, ...stockData })
+            });
+
+            if (response.ok) {
+                populateStockData();
+                resetForm(); // 更新が終わったらフォームを空にして新規登録モードに戻す
+            } else {
+                alert('更新に失敗しました。');
+            }
+        } else {
+            // ==========================================
+            // ▼ 新規登録（POST）モード（今までの処理と同じ）
+            // ==========================================
+            const response = await fetch('stocks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(stockData)
+            });
+
+            if (response.ok) {
+                populateStockData();
+                resetForm();
+            } else {
+                alert('登録に失敗しました。');
+            }
+        }
+    }
+
+        // ▼ 引数を id (数値) から targetStock (Stockオブジェクト全体) に変更
+    async function handleDeleteStock(targetStock: StockItem) {
+        // オブジェクト全体を受け取ったので、name を使って親切なメッセージにできる！
+        if (!window.confirm(`本当に「${targetStock.name}」を削除しますか？`)) {
+            return;
+        }
+
+        // C#のサーバーに送るときは、今まで通り id だけを取り出してURLにくっつける
+        const response = await fetch(`stocks/${targetStock.id}`, {
+            method: 'DELETE'
+        });
 
         if (response.ok) {
             populateStockData();
-            resetForm();
         } else {
-            alert('登録に失敗しました。');
+            alert('削除に失敗しました。');
         }
     }
 }

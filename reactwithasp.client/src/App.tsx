@@ -2,7 +2,12 @@
 import './App.css';
 import { type StockItem } from '../src/interface/StockItem';
 import * as React from 'react';
-
+import {
+    Container, Typography, Box, Paper, TextField, Button,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 function App() {
     // 株データを保存する「箱」を用意
@@ -12,7 +17,20 @@ function App() {
     const [name, setName] = useState('');
     const [price, setPrice] = useState<number | ''>('');
     const [quantity, setQuantity] = useState<number | ''>('');
-    const [editingId, setEditingId] = useState < number | null > (null);
+    const [editingId, setEditingId] = useState<number | null>(null);
+
+    // サーバーからデータを取ってくる関数
+    async function populateStockData() {
+        // C#で作った 'stock' という住所にアクセス
+        const response = await fetch('stocks');
+        const data = await response.json();
+        setStocks(data);
+    }
+
+    // 画面が表示されたら1回だけ実行される処理
+    useEffect(() => {
+        populateStockData();
+    }, []);
 
     const resetForm = () => {
         setCode('');
@@ -29,70 +47,6 @@ function App() {
         setQuantity(stock.quantity);
         setEditingId(stock.id);
     };
-
-    // 画面が表示されたら1回だけ実行される処理
-    useEffect(() => {
-        populateStockData();
-    }, []);
-
-    // 表（テーブル）の中身を作る部分
-    const contents = stocks === undefined
-        ? <p><em>Loading... データを取得中...</em></p>
-         
-        :<table className="table table-striped" aria-labelledby="tabelLabel">
-            <thead>
-                <tr>
-                    <th>銘柄名</th>
-                    <th>コード</th>
-                    <th>保有数</th>
-                    <th>平均取得単価</th>
-                    <th>取得額合計</th>
-                </tr>
-            </thead>
-            <tbody>
-                {stocks.map(stock => (
-                    <tr key={stock.id}>
-                        <td>{stock.name}</td>
-                        <td>{stock.code}</td>
-                        <td>{stock.quantity} 株</td>
-                        <td>{stock.price.toLocaleString()} 円</td>
-                        <td>{stock.totalAmount.toLocaleString()} 円</td>
-                        <td><button onClick={() => handleEditClick(stock)}>更新</button></td>
-                        <td><button onClick={() => handleDeleteStock(stock)}>削除</button></td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>;
-
-    return (
-        <div>
-            <h1 id="tabelLabel">資産管理</h1>
-            <p>サーバーから取得した保有株リスト</p>
-            <form onSubmit={handleSubmit} style={{ marginBottom: '20px', padding: '10px', border: '1px solid #ccc' }}>
-                <input type="text" placeholder="コード (例: 8267)" value={code} onChange={e => setCode(e.target.value)} required />
-                <input type="text" placeholder="銘柄名 (例: イオン)" value={name} onChange={e => setName(e.target.value)} required />
-                <input type="number" placeholder="取得単価" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} required />
-                <input type="number" placeholder="保有数" value={quantity} onChange={e => setQuantity(e.target.value === '' ? '' : Number(e.target.value))} required />
-                <button type="submit" style={{ marginLeft: '10px' }}>
-                    {editingId ? '更新する' : '追加する'}
-                </button>
-                {/* editingId がある（true）時だけ、キャンセルボタンを出す */}
-                {editingId !== null && (
-                    <button type="button" onClick={resetForm} style={{ marginLeft: '10px' }}>キャンセル</button>
-                )}
-            </form>
-            {contents}
-        </div>
-    );
-
-    // サーバーからデータを取ってくる関数
-    async function populateStockData() {
-        // C#で作った 'stock' という住所にアクセス
-        const response = await fetch('stocks');
-        const data = await response.json();
-        setStocks(data);
-    }
-
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault(); // ボタンを押したときの画面のチカッ（リロード）を防ぐ
@@ -140,7 +94,8 @@ function App() {
         }
     }
 
-        // ▼ 引数を id (数値) から targetStock (Stockオブジェクト全体) に変更
+
+    // ▼ 引数を id (数値) から targetStock (Stockオブジェクト全体) に変更
     async function handleDeleteStock(targetStock: StockItem) {
         // オブジェクト全体を受け取ったので、name を使って親切なメッセージにできる！
         if (!window.confirm(`本当に「${targetStock.name}」を削除しますか？`)) {
@@ -158,6 +113,90 @@ function App() {
             alert('削除に失敗しました。');
         }
     }
+
+    const summary = {
+        stockCount: stocks?.length || 0,
+        totalInvestment: (stocks || []).reduce((sum, stock) => sum + (stock.price * stock.quantity), 0)
+    };
+
+    return (
+        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+
+            <Typography variant="h4" component="h1" gutterBottom fontWeight="bold" color="primary">
+                資産管理ダッシュボード
+            </Typography>
+
+            {/* ▼ 1. ダッシュボード部分 */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
+                <Paper sx={{ p: 3, flex: 1, textAlign: 'center', bgcolor: '#e3f2fd', borderRadius: 2 }}>
+                    <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">保有銘柄数</Typography>
+                    <Typography variant="h3" color="primary">{summary.stockCount} <Typography component="span" variant="h6">銘柄</Typography></Typography>
+                </Paper>
+                <Paper sx={{ p: 3, flex: 1, textAlign: 'center', bgcolor: '#e3f2fd', borderRadius: 2 }}>
+                    <Typography variant="subtitle1" color="text.secondary" fontWeight="bold">合計取得額</Typography>
+                    <Typography variant="h3" color="primary">{summary?.totalInvestment?.toLocaleString()} <Typography component="span" variant="h6">円</Typography></Typography>
+                </Paper>
+            </Box>
+
+            {/* ▼ 2. 入力・編集フォーム部分 */}
+            <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }} elevation={2}>
+                <Typography variant="h6" gutterBottom fontWeight="bold">
+                    {editingId !== null ? '✏️ 銘柄を編集' : '➕ 新しい銘柄を登録'}
+                </Typography>
+                <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <TextField label="コード (例: 8267)" value={code} onChange={e => setCode(e.target.value)} required size="small" />
+                    <TextField label="銘柄名 (例: イオン)" value={name} onChange={e => setName(e.target.value)} required size="small" />
+                    <TextField label="取得単価" type="number" value={price} onChange={e => setPrice(e.target.value === '' ? '' : Number(e.target.value))} required size="small" />
+                    <TextField label="保有数" type="number" value={quantity} onChange={e => setQuantity(e.target.value === '' ? '' : Number(e.target.value))} required size="small" />
+
+                    <Button variant="contained" color={editingId !== null ? "success" : "primary"} type="submit" sx={{ height: '40px' }}>
+                        {editingId !== null ? '更新する' : '追加する'}
+                    </Button>
+
+                    {editingId !== null && (
+                        <Button variant="outlined" color="inherit" onClick={resetForm} sx={{ height: '40px' }}>
+                            キャンセル
+                        </Button>
+                    )}
+                </Box>
+            </Paper>
+
+            {/* ▼ 3. テーブル（一覧）部分 */}
+            <TableContainer component={Paper} elevation={2} sx={{ borderRadius: 2 }}>
+                <Table>
+                    <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+                        <TableRow>
+                            <TableCell><strong>銘柄名</strong></TableCell>
+                            <TableCell><strong>コード</strong></TableCell>
+                            <TableCell align="right"><strong>保有数</strong></TableCell>
+                            <TableCell align="right"><strong>平均取得単価</strong></TableCell>
+                            <TableCell align="right"><strong>取得額合計</strong></TableCell>
+                            <TableCell align="center"><strong>操作</strong></TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {stocks?.map(stock => (
+                            <TableRow key={stock.id} hover>
+                                <TableCell>{stock.name}</TableCell>
+                                <TableCell>{stock.code}</TableCell>
+                                <TableCell align="right">{stock.quantity} 株</TableCell>
+                                <TableCell align="right">{stock.price.toLocaleString()} 円</TableCell>
+                                <TableCell align="right">{(stock.price * stock.quantity).toLocaleString()} 円</TableCell>
+                                <TableCell align="center">
+                                    <Button size="small" startIcon={<EditIcon />} onClick={() => handleEditClick(stock)} sx={{ mr: 1 }}>
+                                        編集
+                                    </Button>
+                                    <Button size="small" color="error" startIcon={<DeleteIcon />} onClick={() => handleDeleteStock(stock)}>
+                                        削除
+                                    </Button>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Container>
+    );
 }
 
 export default App;

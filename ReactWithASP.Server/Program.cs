@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using ReactWithASP.Server.Data;
+using ReactWithASP.Server.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,4 +1,4 @@
-﻿namespace ReactWithASP.Server.Data
+﻿namespace ReactWithASP.Server.Model
 {
     public class Stock
     {
@@ -14,5 +14,7 @@
 
         // C#で計算プロパティを作る場合（DBには保存されませんが便利です）
         public decimal TotalAmount => Price * Quantity;
+
+        public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ReactWithASP.Server.Model;
 
@@ -11,9 +12,11 @@ using ReactWithASP.Server.Model;
 namespace ReactWithASP.Server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260322151102_AddTransactions")]
+    partial class AddTransactions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -64,8 +67,9 @@ namespace ReactWithASP.Server.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<int>("StockId")
-                        .HasColumnType("int");
+                    b.Property<string>("StockCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("TransactionDate")
                         .HasColumnType("datetime2");
@@ -76,25 +80,7 @@ namespace ReactWithASP.Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StockId");
-
                     b.ToTable("Transactions");
-                });
-
-            modelBuilder.Entity("ReactWithASP.Server.Model.Transaction", b =>
-                {
-                    b.HasOne("ReactWithASP.Server.Model.Stock", "Stock")
-                        .WithMany("Transactions")
-                        .HasForeignKey("StockId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Stock");
-                });
-
-            modelBuilder.Entity("ReactWithASP.Server.Model.Stock", b =>
-                {
-                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

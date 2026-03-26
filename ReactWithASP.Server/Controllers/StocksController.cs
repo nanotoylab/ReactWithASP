@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ReactWithASP.Server.Data;
+using ReactWithASP.Server.Model;
 
-namespace MyPortfolio.Server.Controllers
+namespace ReactWithASP.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -24,7 +24,9 @@ namespace MyPortfolio.Server.Controllers
         {
             // DBから全件取得してリストにする
             // "await" は「DBからデータが届くまで待つよ」という意味
-            return await _context.Stocks.ToListAsync();
+            return await _context.Stocks
+                .Include(s => s.Transactions)
+                .ToListAsync();
         }
 
         // ▼ POST: データを登録する

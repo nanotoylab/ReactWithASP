@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace ReactWithASP.Server.Data
+namespace ReactWithASP.Server.Model
 {
     public class ApplicationDbContext : DbContext
     {
@@ -10,5 +10,7 @@ namespace ReactWithASP.Server.Data
         }
 
         public DbSet<Stock> Stocks { get; set; }
+
+        public DbSet<Transaction> Transactions { get; set; }
     }
 }
